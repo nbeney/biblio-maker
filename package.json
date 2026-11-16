@@ -1,0 +1,14 @@
+{
+  "name": "biblio-maker",
+  "version": "1.0.0",
+  "description": "Turn .docx footnotes into a bibliography — a single-file browser tool.",
+  "private": true,
+  "type": "commonjs",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "vitest": "^2.1.9"
+  }
+}

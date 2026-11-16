@@ -1,0 +1,101 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`bibliography generation — characterization > produces a stable bibliography snapshot 1`] = `
+"Heydon, John. The Idea of the Law: Charactered from Moses to King Charles, London, 1660
+
+Lowenstein, David. ‘Paradise Lost: Experimental and Unorthodox Sacred Epic’, John Wiley and Sons Ltd, 2018
+
+Martindale, Charles. ‘Writing Epic: Paradise Lost’, Oxford: Oxford University Press, 2011
+
+Marvell, Andrew. ‘On Mr Milton’s Paradise Lost’, Oxford: Oxford University Press, 1971
+
+Milton, John. ‘At a Vacation Exercise in the College, Part Latin, Part English’, Longman Group Limited, 1968
+—. Areopagitica, Hackett Publishing Company, 2003
+—. Of Education, Hackett Publishing Company, 2003
+—. Paradise Lost, Penguin Books, 2003
+
+Moshenska, Joe. Making Darkness Light: The Lives and Times of John Milton, London: Basic Books, 2021
+
+Ricks, Christopher. Geoffrey Hill and ‘The Tongue’s Atrocities’, University College of Swansea, 1978
+
+Sidney, Philip. The Defence of Poesy, Manchester University Press, 2002
+
+Teskey, Gordon. Delirious Milton: The Fate of the Poet in Modernity, Cambridge: Mass Harvard University Press, 2006
+
+Wilson, Talbot. ‘The Narrator of Paradise Lost: Divine Inspiration and Human Knowledge’, vol. 79, no.3, 1971"
+`;
+
+exports[`bibliography generation — characterization > produces stable structured entries 1`] = `
+[
+  {
+    "author": "Heydon, John",
+    "works": 1,
+  },
+  {
+    "author": "Lowenstein, David",
+    "works": 1,
+  },
+  {
+    "author": "Martindale, Charles",
+    "works": 1,
+  },
+  {
+    "author": "Marvell, Andrew",
+    "works": 1,
+  },
+  {
+    "author": "Milton, John",
+    "works": 4,
+  },
+  {
+    "author": "Moshenska, Joe",
+    "works": 1,
+  },
+  {
+    "author": "Ricks, Christopher",
+    "works": 1,
+  },
+  {
+    "author": "Sidney, Philip",
+    "works": 1,
+  },
+  {
+    "author": "Teskey, Gordon",
+    "works": 1,
+  },
+  {
+    "author": "Wilson, Talbot",
+    "works": 1,
+  },
+]
+`;
+
+exports[`footnote fixture — shape > classifies each footnote into a known kind 1`] = `
+{
+  "article": 5,
+  "book": 8,
+  "crossref": 22,
+  "prose": 8,
+  "reference-work": 3,
+}
+`;
+
+exports[`footnote fixture — shape > parses a stable count of bibliographic references 1`] = `13`;
+
+exports[`overlap with the human-curated bibliography (reference only) > reports surname overlap as a baseline metric 1`] = `
+{
+  "generatedAuthors": 10,
+  "humanAuthors": 17,
+  "matched": [
+    "heydon",
+    "martindale",
+    "marvell",
+    "milton",
+    "ricks",
+    "sidney",
+    "teskey",
+    "wilson",
+  ],
+  "matchedAuthors": 8,
+}
+`;
