@@ -109,6 +109,7 @@ footer a{color:#1f9d4c;text-decoration:none}footer a:hover{text-decoration:under
     <div class="toolbar">
       <button id="copyBib" title="Copy the bibliography to the clipboard (rich text with italics, plus plain text)"><iconify-icon icon="lucide:copy"></iconify-icon> Copy</button>
       <button id="exportBib" title="Download the bibliography as bibliography.txt"><iconify-icon icon="lucide:download"></iconify-icon> Export</button>
+      <button id="clearBib" title="Delete all footnotes and the generated bibliography, including the auto-saved copy"><iconify-icon icon="lucide:trash-2"></iconify-icon> Clear</button>
       <span class="stat" id="bibStat" title="Number of distinct works in the bibliography"></span>
     </div>
     <div class="scroll">
@@ -454,9 +455,12 @@ function scheduleSave() {
   }, 500);
 }
 
-$('#clearFn').addEventListener('click', async () => {
+// Clearing wipes the footnotes (the single source of truth) and the derived
+// bibliography, plus the auto-saved copy. Both the Footnotes and Bibliography
+// Clear buttons share this.
+async function clearAll() {
   if (!state.footnotes.length) return;
-  if (!confirm('Delete all footnotes? This also removes the auto-saved copy and cannot be undone.')) return;
+  if (!confirm('Delete all footnotes and the generated bibliography? This also removes the auto-saved copy and cannot be undone.')) return;
   clearTimeout(saveTimer);
   state.fileName = '';
   $('#fileName').textContent = '';
@@ -470,7 +474,10 @@ $('#clearFn').addEventListener('click', async () => {
   setStatus('');
   try { await dbOp('readwrite', (st) => st.delete(KEY)); }
   catch (err) { console.warn('Could not clear saved session', err); }
-});
+}
+
+$('#clearFn').addEventListener('click', clearAll);
+$('#clearBib').addEventListener('click', clearAll);
 
 (async function restore() {
   try {
