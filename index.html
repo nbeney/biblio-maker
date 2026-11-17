@@ -10,7 +10,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <style>
 *{box-sizing:border-box}
-body{margin:0;min-height:100vh;display:flex;flex-direction:column;font:14px system-ui,sans-serif;background:#f4f6fa;color:#222}
+body{margin:0;height:100vh;height:100dvh;overflow:hidden;display:flex;flex-direction:column;font:14px system-ui,sans-serif;background:#f4f6fa;color:#222}
 #menubar{flex:none;height:48px;line-height:48px;padding:0 14px;background:#1f2937;color:#fff;font-weight:800;font-size:22px;letter-spacing:.08em}
 #menubar .g{color:#1f9d4c}
 #menubar iconify-icon{font-size:26px;vertical-align:-5px;margin-left:6px;color:#fff}
@@ -19,12 +19,18 @@ button{font:inherit;padding:6px 14px;border:0;border-radius:6px;cursor:pointer;b
 button:disabled{opacity:.4;cursor:default}
 #fileName{color:#1f7a3d;font-size:13px;font-weight:600}
 #fileName:empty{display:none}
-main{flex:1;padding:14px;min-height:0}
+#top{flex:none;padding:14px 14px 0;background:#f4f6fa}
+main{flex:1;min-height:0;display:flex;flex-direction:column;padding:0 14px}
 .tabs{display:flex;gap:4px;border-bottom:2px solid #d8dce5;margin-bottom:12px}
 .tab{padding:8px 16px;border:0;border-bottom:3px solid transparent;background:none;border-radius:0;color:#667;font-weight:600}
 .tab.active{color:#1f2937;border-bottom-color:#1f9d4c}
 .panel{display:none}
-.panel.active{display:block}
+.panel.active{display:flex;flex-direction:column;flex:1;min-height:0}
+.scroll{flex:1;min-height:0;overflow-y:auto;padding-bottom:14px}
+.toolbar{flex:none}
+.search{position:relative;display:inline-flex;align-items:center;flex:1;min-width:14em;max-width:24em}
+.search iconify-icon{position:absolute;left:10px;font-size:16px;color:#889;pointer-events:none}
+#filterText{font:inherit;padding:6px 10px 6px 32px;border:1px solid #b9c0d0;border-radius:6px;width:100%}
 .toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
 .grp{display:inline-flex;border:1px solid #b9c0d0;border-radius:6px;overflow:hidden}
 .grp button{border-radius:0;background:#fff;color:#334;border-right:1px solid #e3e7ef}
@@ -32,7 +38,7 @@ main{flex:1;padding:14px;min-height:0}
 .grp button.on{background:#1f9d4c;color:#fff}
 .stat{color:#667;font-size:13px;margin-left:auto}
 .stat b{color:#1f9d4c}
-#drop{display:flex;flex-direction:column;align-items:center;gap:4px;border:2px dashed #bbb;border-radius:10px;padding:1rem;text-align:center;color:#667;cursor:pointer;margin-bottom:14px;transition:background .15s,border-color .15s}
+#drop{display:flex;flex-direction:column;align-items:center;gap:4px;border:2px dashed #bbb;border-radius:10px;padding:.6rem;text-align:center;color:#667;cursor:pointer;margin-bottom:14px;transition:background .15s,border-color .15s}
 #drop.hover{border-color:#1f9d4c;background:#eafaf0;color:#1f7a3d}
 #drop input{display:none}
 ol.fn{list-style:none;padding:0;margin:0}
@@ -52,6 +58,7 @@ ol.fn li .kind{font-size:11px;color:#667;border:1px solid #ccd;border-radius:8px
 .biblio .work .title{font-style:italic}
 .hint{color:#889;padding:20px;text-align:center}
 .err{color:#c0392b;font-weight:600}
+@media(max-width:600px){#menubar small{display:none}#drop small{display:none}}
 footer{flex:none;background:#fff;color:#667;border-top:1px solid #d8dce5;font-size:12px;padding:7px 14px;text-align:center}
 footer a{color:#1f9d4c;text-decoration:none}footer a:hover{text-decoration:underline}
 </style>
@@ -59,7 +66,7 @@ footer a{color:#1f9d4c;text-decoration:none}footer a:hover{text-decoration:under
 <body>
 <div id="menubar"><span class="g">BIBLIO</span>MAKER <iconify-icon icon="lucide:square-library"></iconify-icon><small>Turn your footnotes into a bibliography</small></div>
 
-<main>
+<div id="top">
   <label id="drop">
     <input type="file" accept=".docx">
     <iconify-icon icon="lucide:upload" style="font-size:28px;color:#1f9d4c"></iconify-icon>
@@ -71,33 +78,43 @@ footer a{color:#1f9d4c;text-decoration:none}footer a:hover{text-decoration:under
   <div id="status"></div>
 
   <div class="tabs">
-    <button class="tab active" data-tab="footnotes">Footnotes</button>
-    <button class="tab" data-tab="bibliography">Bibliography</button>
+    <button class="tab active" data-tab="footnotes" title="Review and edit the footnotes">Footnotes</button>
+    <button class="tab" data-tab="bibliography" title="View the generated bibliography">Bibliography</button>
   </div>
+</div>
 
+<main>
   <!-- FOOTNOTES -->
   <section class="panel active" id="panel-footnotes">
     <div class="toolbar">
-      <div class="grp" id="filter">
-        <button data-filter="all" class="on">All</button>
-        <button data-filter="good">Parsed only</button>
-        <button data-filter="bad">Unparsed only</button>
+      <div class="grp" id="filter" role="group" aria-label="Filter by parse status">
+        <button data-filter="all" class="on" title="Show all footnotes">All <span class="cnt"></span></button>
+        <button data-filter="good" title="Show only footnotes recognised as references">Parsed <span class="cnt"></span></button>
+        <button data-filter="bad" title="Show only footnotes that were not recognised as references">Unparsed <span class="cnt"></span></button>
       </div>
-      <button id="exportFn"><iconify-icon icon="lucide:download"></iconify-icon> Export footnotes</button>
-      <span class="stat" id="fnStat"></span>
+      <span class="search"><iconify-icon icon="lucide:search"></iconify-icon><input type="search" id="filterText" placeholder="Filter, e.g. milton -ibid" title="Space-separated terms. Prefix a term with - to exclude it." spellcheck="false"></span>
+      <button id="copyFn" title="Copy the visible footnotes to the clipboard as plain text"><iconify-icon icon="lucide:copy"></iconify-icon> Copy</button>
+      <button id="exportFn" title="Download the visible footnotes as footnotes.txt"><iconify-icon icon="lucide:download"></iconify-icon> Export</button>
+      <button id="clearFn" title="Delete all footnotes, including the auto-saved copy"><iconify-icon icon="lucide:trash-2"></iconify-icon> Clear</button>
+      <span class="stat" id="fnStat" title="Footnotes shown / hidden by the current filters"></span>
     </div>
-    <ol class="fn" id="fnList"></ol>
-    <div class="hint" id="fnHint">Load a document to see its footnotes.</div>
+    <div class="scroll">
+      <ol class="fn" id="fnList"></ol>
+      <div class="hint" id="fnHint">Load a document to see its footnotes.</div>
+    </div>
   </section>
 
   <!-- BIBLIOGRAPHY -->
   <section class="panel" id="panel-bibliography">
     <div class="toolbar">
-      <button id="exportBib"><iconify-icon icon="lucide:download"></iconify-icon> Export bibliography</button>
-      <span class="stat" id="bibStat"></span>
+      <button id="copyBib" title="Copy the bibliography to the clipboard (rich text with italics, plus plain text)"><iconify-icon icon="lucide:copy"></iconify-icon> Copy</button>
+      <button id="exportBib" title="Download the bibliography as bibliography.txt"><iconify-icon icon="lucide:download"></iconify-icon> Export</button>
+      <span class="stat" id="bibStat" title="Number of distinct works in the bibliography"></span>
     </div>
-    <div class="biblio" id="bibOut"></div>
-    <div class="hint" id="bibHint">Load a document to generate its bibliography.</div>
+    <div class="scroll">
+      <div class="biblio" id="bibOut"></div>
+      <div class="hint" id="bibHint">Load a document to generate its bibliography.</div>
+    </div>
   </section>
 </main>
 
@@ -110,7 +127,7 @@ const W_NS = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
 const SKIP_TYPES = new Set(['separator', 'continuationSeparator', 'continuationNotice']);
 
 const $ = (s) => document.querySelector(s);
-let state = { footnotes: [], parsed: [], biblioEntries: [], biblioText: '', filter: 'all' };
+let state = { footnotes: [], parsed: [], biblioEntries: [], biblioText: '', filter: 'all', text: '', fileName: '' };
 
 /* ---------- file loading ---------- */
 const drop = $('#drop');
@@ -132,6 +149,7 @@ async function handleFile(file) {
     return;
   }
   $('#fileName').textContent = file.name;
+  state.fileName = file.name;
   setStatus('Reading ' + file.name + '…');
   try {
     const zip = await JSZip.loadAsync(file);
@@ -166,6 +184,7 @@ function loadFootnotes(footnotes) {
   state.biblioText = bib.text;
   renderFootnotes();
   renderBibliography();
+  scheduleSave();
 }
 
 /* ---------- footnotes rendering ---------- */
@@ -176,26 +195,52 @@ $('#filter').addEventListener('click', (e) => {
   renderFootnotes();
 });
 
+// Text filter: space-separated terms, case-insensitive substring match.
+// "-term" excludes footnotes containing term; all other terms must be present.
+function matchesText(raw) {
+  const hay = raw.toLowerCase();
+  for (const t of state.text.toLowerCase().split(/\s+/).filter(Boolean)) {
+    if (t.startsWith('-')) {
+      if (t.length > 1 && hay.includes(t.slice(1))) return false;
+    } else if (!hay.includes(t)) return false;
+  }
+  return true;
+}
+
+function isVisible(r) {
+  if (state.filter === 'good' && !r.parsed) return false;
+  if (state.filter === 'bad' && r.parsed) return false;
+  return matchesText(r.raw);
+}
+
+function updateFnStat() {
+  const total = state.parsed.length;
+  const good = state.parsed.filter((x) => x.parsed).length;
+  const visible = state.parsed.filter(isVisible).length;
+  const counts = { all: total, good, bad: total - good };
+  document.querySelectorAll('#filter button').forEach((b) => {
+    b.querySelector('.cnt').textContent = total ? `(${counts[b.dataset.filter]})` : '';
+  });
+  $('#fnStat').innerHTML = total ? `<b>${visible}</b> visible / ${total - visible} hidden` : '';
+}
+
+$('#filterText').addEventListener('input', (e) => { state.text = e.target.value; renderFootnotes(); });
+
 function renderFootnotes() {
   const list = $('#fnList');
   list.innerHTML = '';
-  const total = state.parsed.length;
-  const good = state.parsed.filter((r) => r.parsed).length;
-  $('#fnHint').style.display = total ? 'none' : 'block';
-  $('#fnStat').innerHTML = total
-    ? `<b>${good}</b> parsed / ${total} total`
-    : '';
+  $('#fnHint').style.display = state.parsed.length ? 'none' : 'block';
+  updateFnStat();
 
   state.parsed.forEach((r, i) => {
-    if (state.filter === 'good' && !r.parsed) return;
-    if (state.filter === 'bad' && r.parsed) return;
+    if (!isVisible(r)) return;
     const li = document.createElement('li');
     li.className = r.parsed ? 'good' : 'bad';
     li.dataset.index = i;
     li.innerHTML =
       `<span class="num">${i + 1}.</span>` +
-      `<span class="txt" contenteditable="true" spellcheck="false"></span>` +
-      `<span class="kind">${r.kind}</span>`;
+      `<span class="txt" contenteditable="true" spellcheck="false" title="Click to edit. Up/Down/Enter move between footnotes, Esc leaves the field"></span>` +
+      `<span class="kind" title="Detected footnote type">${r.kind}</span>`;
     li.querySelector('.txt').textContent = r.raw;
     list.appendChild(li);
   });
@@ -220,15 +265,14 @@ $('#fnList').addEventListener('input', (e) => {
   li.querySelector('.kind').textContent = r.kind;
 
   // Update the parsed/total counter.
-  const total = state.parsed.length;
-  const good = state.parsed.filter((x) => x.parsed).length;
-  $('#fnStat').innerHTML = `<b>${good}</b> parsed / ${total} total`;
+  updateFnStat();
 
   // Regenerate the bibliography from the current footnote set.
   const bib = generateBibliography(state.footnotes);
   state.biblioEntries = bib.entries;
   state.biblioText = bib.text;
   renderBibliography();
+  scheduleSave();
 });
 
 // Keyboard navigation while editing a footnote.
@@ -321,17 +365,123 @@ function download(name, text) {
   URL.revokeObjectURL(a.href);
 }
 
+function visibleFootnoteLines() {
+  return state.parsed
+    .map((r, i) => (isVisible(r) ? `${i + 1}. [${r.parsed ? 'parsed:' : 'unparsed:'}${r.kind}] ${r.raw}` : null))
+    .filter(Boolean);
+}
+
+async function copyTo(btn, items) {
+  const label = btn.innerHTML;
+  try {
+    if (window.ClipboardItem && Object.keys(items).length > 1) {
+      const data = {};
+      for (const [type, text] of Object.entries(items)) data[type] = new Blob([text], { type });
+      await navigator.clipboard.write([new ClipboardItem(data)]);
+    } else {
+      await navigator.clipboard.writeText(items['text/plain']);
+    }
+    btn.textContent = 'Copied!';
+  } catch (err) {
+    console.error(err);
+    btn.textContent = 'Copy failed';
+  }
+  setTimeout(() => { btn.innerHTML = label; }, 1500);
+}
+
+// Exports and copies cover the footnotes currently shown (filters applied).
 $('#exportFn').addEventListener('click', () => {
-  if (!state.footnotes.length) return;
-  const lines = state.parsed.map((r, i) =>
-    `${i + 1}. [${r.parsed ? 'parsed:' + r.kind : 'unparsed:' + r.kind}] ${r.raw}`);
-  download('footnotes.txt', lines.join('\n') + '\n');
+  const lines = visibleFootnoteLines();
+  if (lines.length) download('footnotes.txt', lines.join('\n') + '\n');
+});
+
+$('#copyFn').addEventListener('click', (e) => {
+  const lines = visibleFootnoteLines();
+  if (lines.length) copyTo(e.currentTarget, { 'text/plain': lines.join('\n') });
 });
 
 $('#exportBib').addEventListener('click', () => {
   if (!state.biblioText) return;
   download('bibliography.txt', 'BIBLIOGRAPHY:\n\n' + state.biblioText + '\n');
 });
+
+const esc = (t) => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+// HTML version: italic titles, one <p> per author with space after it.
+function biblioHtml() {
+  return state.biblioEntries.map((entry) =>
+    '<p style="margin:0 0 1em 0">' +
+    entry.works.map((w, i) =>
+      (i === 0 ? esc(entry.author) : '—') + '. <i>' + esc(w.title) + '</i>' +
+      esc([w.publisher, w.year].filter(Boolean).map((x) => ', ' + x).join(''))
+    ).join('<br>') + '</p>'
+  ).join('');
+}
+
+$('#copyBib').addEventListener('click', (e) => {
+  if (!state.biblioText) return;
+  copyTo(e.currentTarget, { 'text/html': biblioHtml(), 'text/plain': state.biblioText });
+});
+
+/* ---------- auto-save (IndexedDB) ---------- */
+// Persists the (possibly hand-edited) footnotes so a reload doesn't lose work.
+const DB_NAME = 'biblio-maker', STORE = 'session', KEY = 'current';
+function openDb() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, 1);
+    req.onupgradeneeded = () => req.result.createObjectStore(STORE);
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+async function dbOp(mode, fn) {
+  const db = await openDb();
+  return new Promise((resolve, reject) => {
+    const req = fn(db.transaction(STORE, mode).objectStore(STORE));
+    req.onsuccess = () => { db.close(); resolve(req.result); };
+    req.onerror = () => { db.close(); reject(req.error); };
+  });
+}
+
+let saveTimer;
+function scheduleSave() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(async () => {
+    try {
+      await dbOp('readwrite', (st) => st.put(
+        { fileName: state.fileName, footnotes: state.footnotes, savedAt: Date.now() }, KEY));
+    } catch (err) { console.warn('Auto-save failed', err); }
+  }, 500);
+}
+
+$('#clearFn').addEventListener('click', async () => {
+  if (!state.footnotes.length) return;
+  if (!confirm('Delete all footnotes? This also removes the auto-saved copy and cannot be undone.')) return;
+  clearTimeout(saveTimer);
+  state.fileName = '';
+  $('#fileName').textContent = '';
+  drop.querySelector('input').value = '';
+  state.footnotes = [];
+  state.parsed = [];
+  state.biblioEntries = [];
+  state.biblioText = '';
+  renderFootnotes();
+  renderBibliography();
+  setStatus('');
+  try { await dbOp('readwrite', (st) => st.delete(KEY)); }
+  catch (err) { console.warn('Could not clear saved session', err); }
+});
+
+(async function restore() {
+  try {
+    const saved = await dbOp('readonly', (st) => st.get(KEY));
+    if (!saved || !saved.footnotes || !saved.footnotes.length) return;
+    state.fileName = saved.fileName || '';
+    $('#fileName').textContent = state.fileName;
+    loadFootnotes(saved.footnotes);
+    setStatus('Restored your last session (' + new Date(saved.savedAt).toLocaleString() + ').');
+  } catch (err) { console.warn('Restore failed', err); }
+})();
 </script>
 </body>
 </html>
