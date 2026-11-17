@@ -372,21 +372,46 @@ function visibleFootnoteLines() {
     .filter(Boolean);
 }
 
+// Legacy clipboard copy for insecure contexts (plain http:// on a real domain),
+// where navigator.clipboard is undefined. Copies plain text only.
+function legacyCopyText(text) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.setAttribute('readonly', '');
+  ta.style.position = 'fixed';
+  ta.style.top = '-1000px';
+  document.body.appendChild(ta);
+  ta.select();
+  let ok = false;
+  try { ok = document.execCommand('copy'); } catch (err) { ok = false; }
+  document.body.removeChild(ta);
+  return ok;
+}
+
 async function copyTo(btn, items) {
   const label = btn.innerHTML;
+  const plain = items['text/plain'];
+  let ok = false;
   try {
-    if (window.ClipboardItem && Object.keys(items).length > 1) {
-      const data = {};
-      for (const [type, text] of Object.entries(items)) data[type] = new Blob([text], { type });
-      await navigator.clipboard.write([new ClipboardItem(data)]);
+    // The async Clipboard API is only available in a secure context
+    // (https:// or localhost). Fall back to execCommand otherwise.
+    if (navigator.clipboard && window.isSecureContext) {
+      if (window.ClipboardItem && Object.keys(items).length > 1) {
+        const data = {};
+        for (const [type, text] of Object.entries(items)) data[type] = new Blob([text], { type });
+        await navigator.clipboard.write([new ClipboardItem(data)]);
+      } else {
+        await navigator.clipboard.writeText(plain);
+      }
+      ok = true;
     } else {
-      await navigator.clipboard.writeText(items['text/plain']);
+      ok = legacyCopyText(plain);
     }
-    btn.textContent = 'Copied!';
   } catch (err) {
     console.error(err);
-    btn.textContent = 'Copy failed';
+    ok = legacyCopyText(plain); // last-ditch fallback
   }
+  btn.textContent = ok ? 'Copied!' : 'Copy failed';
   setTimeout(() => { btn.innerHTML = label; }, 1500);
 }
 
